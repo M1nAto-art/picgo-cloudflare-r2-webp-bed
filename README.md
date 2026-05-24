@@ -1,108 +1,82 @@
-# 🚀 PicGo-Cloudflare-R2-WebP-Bed: Cloudflare R2 极速免费 WebP 自动化图床搭建与终极闭坑指南
+# 🚀 PicGo-Cloudflare-R2-WebP-Bed: Cloudflare R2 自动化图床全链路“真·闭坑”上架指南
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-建站、写博客、Markdown 深度用户的终极省钱与性能优化方案！
+拒绝网上复制粘贴的假教程！本指南由独立开发者在 **国内真实高墙环境** 下，历经多次断联、报错、路径碎裂后，纯手工硬抗调通的 **PicGo + Cloudflare R2 + WebP 自动化压缩** 终极通关文档。
 
-本方案旨在引导你使用 **PicGo 客户端**，无缝对接 **Cloudflare R2** 免费对象存储（每月 10GB 免费额度，全网免流量费），并在上传瞬间**全自动将图片转换为 WebP 格式并极致高压缩**。
-
-针对国内用户配置此流程时必然遭遇的 `imagemin` 插件安装报错、二进制包下载死锁、Cloudflare S3 权限配置错乱等“高血压”问题，本项目给出了**百分之百跑通的完全体闭坑解决方案**。
+专门拯救因为“上传路径错乱”和“URL模板对不齐”导致 Markdown 疯狂红叉的建站老哥。
 
 ---
 
-## ✨ 为什么选择这套方案？
+## ✨ 核心战果与大实话
 
-- 💰 **彻底免费**：Cloudflare R2 每月提供 10GB 存储额度，**A/B类请求全部免费配额，最重要的是公网出流量（Download）完全免费！** 配合 CF CDN，一毛钱不用花就能拥有顶级大厂的高防 CDN 节点加速。
-- ⚡ **无感自动 WebP 压缩**：本地拖入 5MB 的原生 4K 截图，PicGo 瞬间在后台全自动压缩成 200KB 的超清 WebP 并完成上传，Markdown 直接拿链接，网站加载速度直接飙升 500%！
-- 🛡️ **专治各种安装不服**：全量收录了解决本地 Node 环境报错、网络死锁的底层黑魔法，拒绝鬼打墙。
-
----
-
-## 🛠️ 第一阶段：Cloudflare R2 后台绝不翻车配置
-
-要让 PicGo 能顺利把图砸进 R2，必须拿到正确的 S3 密钥：
-
-1. **新建存储桶（Bucket）**：
-   - 登录 Cloudflare 后台 -> `R2` -> `创建存储桶`。
-   - 命名你的桶（例如：`my-img-bed`），地区选择 `自动` 即可。
-2. **绑定自定义域名（核心，否则无法公网访问）**：
-   - 点进建好的桶 -> `设置` -> 找到 `公开访问`。
-   - 点击 `连接域`，输入你在 CF 解析的专属二级域名（例如：`img.yourdomain.com`），让 CF 全自动完成配置。
-3. **获取 S3 API 凭证（至关重要 ⚠️）**：
-   - 回到 R2 首页，点击右侧的 **`管理 R2 API 令牌`** -> `创建 API 令牌`。
-   - 权限选择：**`管理员读写（Admin Read and Write）`**（千万别选只读！）。
-   - TTL 选择 `永久`。
-   - 点击创建后，**立刻用记事本抄下以下三个核心参数**（刷新页面就再也看不到了！）：
-     - `访问令牌 ID` (对应 PicGo 的 AccessKeyId)
-     - `机密访问令牌` (对应 PicGo 的 SecretAccessKey)
-     - `为 S3 客户端管辖的终结点 URL` (简称为 Endpoint)
+- ❌ **别迷信国内源**：针对底层核心依赖，国内的清华源、淘宝源在这套组合拳面前**全线瘫痪**。必须直接**挂上代理，强制走国外官方源**才能顺利完成依赖落盘！
+- 🧩 **极致精简的插件配置**：拒绝花里胡哨。核心转换插件没有那么复杂的恶心参数，核心只需搞定 **`compress`** 压缩开关与 **`key`** 核心凭证。
+- 🎯 **直击终极地雷区**：本指南核心详解 **【上传文件路径】** 与 **【自定义输出 URL 模板】** 的生死对齐逻辑，确保你复制出来的链接百分之百能直接在公网秒加载。
 
 ---
 
-## 📦 第二阶段：PicGo 客户端配置与插件逆天闭坑
+## 🛠️ 第一阶段：环境准备（拒绝鬼打墙）
 
-### 1. 基础图床插件安装
-1. 打开 PicGo，进入 `插件设置`，搜索并安装 **`s3`** 插件（推荐使用 `s3-repository` 插件，对 R2 兼容性极好）。
-2. 配置 S3 插件参数：
-   - **应用密钥 ID**：填入刚才复制的 `访问令牌 ID`。
-   - **应用密钥**：填入刚才复制的 `机密访问令牌`。
-   - **桶名**：填入你在 R2 创建的存储桶名字（如 `my-img-bed`）。
-   - **自定义连接地址 (Endpoint)**：填入刚才复制的 `终结点 URL`。
-   - **自定义域名**：填入你绑定的自定义域名（带上协议头，如 `https://img.yourdomain.com`）。
-
----
-
-### 2. WebP 自动化压缩插件安装（高血压重灾区 ⚡）
-
-要实现自动转 WebP 并在本地高压缩，我们需要安装 **`web-transformer`** 插件。**直接在 PicGo 界面点击安装大概率会因为二进制墙卡死报错！请使用以下硬核姿势安装：**
-
-#### 🔥 终极闭坑通关步骤：
-1. **Windows 用户**打开 PowerShell / **Mac 用户**打开终端，通过全局换源，强行打通二进制文件的下载通道。直接按顺序运行以下三行命令：
+由于底层依赖对网络环境要求极度严苛，请务必在安装前执行以下操作：
+1. 开启你的全局代理客户端，确保终端/命令行能够无障碍访问公网。
+2. 放弃所有国内 npm 镜像源，强行切回官方根服务器：
    ```bash
-   # 1. 切换国内清华/淘宝源
-   npm config set registry [https://registry.npmmirror.com](https://registry.npmmirror.com)
-   
-   # 2. 设置 imagemin 底层二进制文件的国内专属镜像（核心灵魂！绕过外网死锁）
-   npm config set gif鼓勵_binary_host_mirror [https://npmmirror.com/mirrors/giflib](https://npmmirror.com/mirrors/giflib)
-   npm config set jpegtran_binary_host_mirror [https://npmmirror.com/mirrors/jpegtran-bin](https://npmmirror.com/mirrors/jpegtran-bin)
-   npm config set optipng_binary_host_mirror [https://npmmirror.com/mirrors/optipng-bin](https://npmmirror.com/mirrors/optipng-bin)
-   npm config set pngquant_binary_host_mirror [https://npmmirror.com/mirrors/pngquant-bin](https://npmmirror.com/mirrors/pngquant-bin)
+   npm config set registry [https://registry.npmjs.org](https://registry.npmjs.org)
    ```
-2. **肉身强行切进 PicGo 插件运行底层目录**：
-   - Windows 路径：`cd $env:APPDATA\picgo`
-   - Mac 路径：`cd ~/.config/picgo`
-3. **在底层直接用命令强制灌入插件**：
-   ```bash
-   npm install picgo-plugin-web-transformer --legacy-peer-deps
-   ```
-4. 运行成功后，彻底重启 PicGo 客户端。此时在 `插件设置` 里，你会发现 `web-transformer` 已经乖乖听话、完好无损地亮起来了！
+3. 切进 PicGo 的本地核心数据目录（Windows 通常为 `%appdata%\picgo`），挂着代理强制执行 `npm install` 灌入插件，直到终端吐出成功绿标。
 
 ---
 
-## ⚙️ 第三阶段：`web-transformer` 完美参数推荐
+## ⚡ 第二阶段：直击终极雷区——参数与路径生死对齐
 
-点击 `web-transformer` 插件的齿轮进入配置，为了达到画质毫无肉眼损失、体积缩减到极致的平衡，请无脑抄以下作业：
+很多老哥图片明明显示上传成功了，但在 Markdown 里死活读不出来，全是败在这一步。请严格对照以下完全体参数进行肉眼对齐：
 
-```json
-{
-  "convertFormat": "webp",    // 强制转换为完全体 WebP 格式
-  "isConvert": true,          // 开启自动转换
-  "quality": 75,              // 推荐画质设定为 75（学术界公认的 WebP 最佳性价比性价比甜点区，体积暴缩，画质无感）
-  "appendedString": ""        // 后缀留空，保持原文件名清爽
-}
+### 1. 核心转换插件配置
+点开插件设置，收起所有幻想，只保留最硬核的两个核心：
+- **`compress`**: 开启（确保拖入的 JPG/PNG 瞬间被本地重构为 WebP 核心压缩流）。
+- **`key`**: 填入你专属的 API 鉴权凭证（保持通道合法互通）。
+
+### 2. 重灾区：S3/R2 存储图床参数（决定文件去哪、URL长啥样）
+在 PicGo 的 R2/S3 图床配置大窗里，请死死盯紧下面这两个地方：
+
+* 📌 **【应用子目录 / 上传路径 (Upload Path)】**：
+  - **地雷表现**：乱写或者留空，导致所有图片混乱堆在 R2 存储桶的根目录，或者因为带了不规范的斜杠 `/` 导致 R2 无法识别。
+  - **正确姿势**：建议配置为类似 `img/{year}/{month}/` 的动态格式。
+  - **神仙提醒**：注意前后斜杠的闭合！这样 PicGo 在上传时，会自动在 Cloudflare R2 桶内帮你归类建档，哪怕传几万张图，后台也井井有条。
+
+* 📌 **【自定义输出 URL 模板 (Custom Output URL Pattern)】**：
+  - **地雷表现**：复制出来的链接默认指向了 Cloudflare R2 那个又臭又长、还被高墙选择性致盲的 raw 内部终结点网址，导致 Markdown 粘贴后全网断联。
+  - **正确姿势**：必须将其强行重构为你自己在 CF 绑定的漂亮自定义域名！
+  - **终极对齐公式**：
+    配置模板必须与你的上传路径严丝合缝地拼接在一起。例如填入：
+    `https://img.yourdomain.com/img/{year}/{month}/{fullName}`
+    *(确保自定义域名后面跟着的路径，和上面的应用子目录完全一致，否则吐出来的 URL 绝对会报 404 碎裂！)*
+
+---
+
+## 📊 完美通电审计
+
+当你的**代理网络**、**精简插件 Key**、**上传路径**以及**URL模板**四合一物理闭环后，整套战车将爆发出恐怖的稳定性：
+
+```text
+[本地拖入大图] 
+      │
+      ▼ (挂代理走官方源下好的底层固件)
+[本地秒转完全体 WebP 并极限压缩] 
+      │
+      ▼ (顺着标准 Upload Path: img/2026/05/ 归类)
+[空投至 Cloudflare R2 存储桶] 
+      │
+      ▼ (通过自定义输出 URL 模板完美洗地)
+[剪贴板自动获取: [https://img.yourdomain.com/img/2026/05/pic.webp](https://img.yourdomain.com/img/2026/05/pic.webp)]
 ```
 
----
-
-## 🏁 享用起飞成果
-
-全部对齐之后，将 PicGo 的默认图床切换为你的 S3 对应存储桶。
-
-现在，你随便截一张几兆大的 PNG 巨图，往 PicGo 悬浮窗里一丢——本地 Nginx 级内核全自动将其踩碎成 100 多 KB 的 WebP，紧接着无感空投至 Cloudflare R2 全球 CDN 铁冷库。 Markdown 链接瞬间到手，整套网站图床链路直接进入全自动赛博现代化时代！
+从此 Markdown 粘贴即起飞，再无红叉，全网 CDN 极速盲刷！
 
 ---
 
 ## 📄 许可证
 
 本项目基于 **[MIT License](LICENSE)** 协议开源。
-欢迎各位被 `imagemin` 折腾过的站长、极客老哥们提交 PR 补充更多操作系统的底层闭坑环境魔改法。
+本天书由传奇机长在键盘上一个字一个字用血泪砸出来，转载请注明出处。祝各位建站老哥的服务器永不断联！
